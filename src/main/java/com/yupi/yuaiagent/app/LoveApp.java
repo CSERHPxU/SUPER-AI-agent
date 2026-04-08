@@ -195,6 +195,24 @@ public class LoveApp {
         return content;
     }
 
+    public Flux<String> doChatWithToolsByStream(String message, String chatId) {
+        return chatClient
+                .prompt()
+                .user(message)
+                // 保留原有的 Advisor（如聊天记忆、日志记录等）
+                .advisors(spec -> spec.param(ChatMemory.CONVERSATION_ID, chatId))
+                .advisors(new MyLoggerAdvisor())
+                // 保留工具回调逻辑
+                .toolCallbacks(allTools)
+                .stream()
+                .content()
+                // 如果需要记录最终输出的日志，可以使用 doOnComplete 或 doOnNext
+                .doOnNext(chunk -> {
+                    // 这里记录的是每一个数据分片
+                    // log.debug("Streaming chunk: {}", chunk);
+                });
+    }
+
     // AI 调用 MCP 服务
 
     @Resource
